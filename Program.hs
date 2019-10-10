@@ -26,7 +26,7 @@ parse code = program where
 
 optimize :: Instruction -> Instruction
 optimize program = optimized where
-  optimize (Add n: Add m: xs) = optimize (Add (m + n) : xs)
+  optimize (Add n: Add m: xs) =  optimize (if m + n /= 0 then (Add (m + n) : xs) else xs)
   optimize (Move n: Move m: xs) = optimize (Move (m + n) : xs)
   optimize ((Loop instructions): xs) = (Loop (optimize instructions)) : (optimize xs)
   optimize ((Program instructions): xs) = [Program (optimize instructions)]
@@ -35,10 +35,13 @@ optimize program = optimized where
   optimized:_ = optimize [program]
 
 compile :: Instruction -> [Char]
-compile (Add val) = "data[ptr] = (data[ptr] + " ++ show (val `mod` 256) ++ ") % 256;"
-compile (Move val) = "ptr +=" ++ show val ++ ";"
-compile Print = "print (data[ptr]);"
-compile Read = "data[ptr] = await read ();"
+compile (Add val) | val > 0 = "data[ptr] += " ++ show val ++ ";"
+compile (Add val) | val < 0 = "data[ptr] -= " ++ show (-val) ++ ";"
+compile (Add 0) = ""
+compile (Move val) = "ptr += " ++ show val ++ ";"
+compile Print = "printf(\"%c\", data[ptr]);"
+compile Read = "scanf(\"%c\", data + ptr);"
 compile (Loop instructions) = "while (data[ptr]) { " ++ intercalate "\n" (map compile instructions) ++ " }"
-compile (Program instructions) = "async function program(print, read) { " ++ runtime ++ intercalate "\n" (map compile instructions) ++ " }" where
-  runtime = "const data = Array.from({ length: 30000 }, () => 0); let ptr = 0;"
+compile (Program instructions) = runtime ++ "int main() { " ++ intercalate "\n" (map compile instructions) ++ " }" where
+  memSize = 30000
+  runtime = "#include <stdio.h>\n#define MEM_SIZE = " ++ show memSize ++ "\nchar data[MEM_SIZE];"
