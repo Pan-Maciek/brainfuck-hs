@@ -44,7 +44,7 @@ compile (Move val) = "ptr += " ++ show val ++ ";"
 compile Print = "printf(\"%c\", data[ptr]);"
 compile Read = "scanf(\"%c\", data + ptr);"
 compile (Loop instructions) = "while (data[ptr]) { " ++ intercalate "\n" (map compile instructions) ++ " }"
-compile (Program instructions) = runtime ++ "int main() { " ++ intercalate "\n" (map compile instructions) ++ " }" where
+compile (Program instructions) = runtime ++ "int main() { " ++ intercalate "\n" (map compile instructions) ++ "\nprintf(\"\\n\"); }" where
   memSize = 30000
   runtime = "#include <stdio.h>\n#define MEM_SIZE " ++ show memSize ++ "\nchar data[MEM_SIZE]; int ptr = 0;"
 
