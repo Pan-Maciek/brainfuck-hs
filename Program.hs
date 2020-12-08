@@ -29,9 +29,9 @@ parse code = program where
 optimize :: Instruction -> Instruction
 optimize program = optimized where
   optimize (Add n: Add m: xs) =  optimize (if m + n /= 0 then Add (m + n) : xs else xs)
-  optimize (Move n: Move m: xs) = optimize (Move (m + n) : xs)
-  optimize ((Loop instructions): xs) = (Loop (optimize instructions)) : (optimize xs)
-  optimize ((Program instructions): xs) = [Program (optimize instructions)]
+  optimize (Move n: Move m: xs) = optimize (if m + n /= 0 then Move (m + n) : xs else xs)
+  optimize (Loop instructions: xs) = (Loop (optimize instructions)) : (optimize xs)
+  optimize (Program instructions: xs) = [Program (optimize instructions)]
   optimize (instr: xs) = instr : (optimize xs)
   optimize [] = []
   optimized:_ = optimize [program]
